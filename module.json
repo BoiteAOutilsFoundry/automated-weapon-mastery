@@ -50,8 +50,8 @@
   "socket": true,
   "styles": [
     "styles/awm.css"
-  ]
+  ],
   "url": "https://github.com/BoiteAOutilsFoundry/automated-weapon-mastery",
   "manifest": "https://github.com/BoiteAOutilsFoundry/automated-weapon-mastery/releases/download/v12.0.0/module.json",
-  "download": "https://github.com/BoiteAOutilsFoundry/automated-weapon-mastery/releases/download/v12.0.0/automated-marks.zip"
+  "download": "https://github.com/BoiteAOutilsFoundry/automated-weapon-mastery/releases/download/v12.0.0/automated-weapon-mastery.zip"
 }
