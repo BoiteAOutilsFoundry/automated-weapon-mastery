@@ -1,0 +1,57 @@
+{
+  "id": "automated-weapon-mastery",
+  "title": "Automated Weapon Mastery",
+  "description": "Configure mastered weapons on the Weapon Mastery feature and detect their use with Midi-QOL.",
+  "version": "12.0.0",
+  "authors": [
+    {
+      "name": "Hope"
+    }
+  ],
+  "compatibility": {
+    "minimum": "12",
+    "verified": "12.331",
+    "maximum": "12"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "4.4.2",
+          "verified": "4.4.2",
+          "maximum": "4.4.2"
+        }
+      }
+    ],
+    "requires": [
+      {
+        "id": "midi-qol",
+        "type": "module",
+        "compatibility": {
+          "minimum": "12.4.53",
+          "verified": "12.4.53"
+        }
+      },
+      {
+        "id": "times-up",
+        "type": "module",
+        "compatibility": {
+          "minimum": "13.1.0",
+          "verified": "13.1.0"
+        }
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "socket": true,
+  "styles": [
+    "styles/awm.css"
+  ]
+  "url": "https://github.com/BoiteAOutilsFoundry/automated-weapon-mastery",
+  "manifest": "https://github.com/BoiteAOutilsFoundry/automated-weapon-mastery/releases/download/v12.0.0/module.json",
+  "download": "https://github.com/BoiteAOutilsFoundry/automated-weapon-mastery/releases/download/v12.0.0/automated-marks.zip"
+}

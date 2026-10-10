@@ -1,0 +1,108 @@
+.awm-panel {
+  margin: 0.75rem 0 0;
+  padding: 0.7rem;
+  border: 1px solid var(--color-border-light-2, #999);
+  border-radius: 4px;
+}
+.awm-panel h3 { margin: 0 0 .45rem; }
+.awm-selected {
+  margin: 0 0 .6rem;
+  padding: 0;
+  list-style: none;
+}
+.awm-selected-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 8px;
+  margin: .15rem 0;
+}
+.awm-selected-name {
+  display: inline-flex;
+  align-items: center;
+}
+.awm-selected-name::before {
+  content: "•";
+  margin-right: .5rem;
+}
+.awm-remove {
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  margin: 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.awm-empty { margin: 0 0 .6rem; opacity: .7; font-style: italic; }
+.awm-configure { width: 100%; height: 36px; }
+
+/* Dedicated V12 Application: no native Dialog footer. */
+.awm-config-app { width: 500px !important; height: 450px !important; }
+.awm-config-app .window-content {
+  height: calc(100% - 30px);
+  padding: 10px;
+  overflow: hidden;
+}
+.awm-config-body {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 34px minmax(0, 1fr) 24px 36px;
+  gap: 8px;
+}
+.awm-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 170px;
+  gap: 8px;
+  align-items: stretch;
+}
+.awm-tools .awm-search,
+.awm-tools .awm-filter {
+  width: 100%;
+  height: 34px;
+  min-height: 34px;
+  margin: 0;
+  box-sizing: border-box;
+}
+.awm-weapon-list {
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid rgba(0,0,0,.25);
+  border-radius: 3px;
+  padding: 2px 0;
+}
+.awm-weapon-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 2px 8px;
+  margin: 0;
+  border-bottom: 1px solid rgba(0,0,0,.1);
+}
+.awm-weapon-row:last-child { border-bottom: 0; }
+.awm-weapon-row:hover { background: rgba(0,0,0,.05); }
+.awm-weapon-row input[type="checkbox"] { width: 20px; height: 20px; margin: 0; }
+.awm-count { line-height: 24px; }
+.awm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  height: 36px;
+}
+.awm-actions button {
+  flex: 0 0 140px;
+  width: 140px;
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  margin: 0;
+  padding: 0 10px;
+}
+.awm-chat-card { padding: .25rem 0; }
+
+/* A hidden row must not be overridden by the grid display rule. */
+.awm-config-app .awm-weapon-row[hidden] { display: none !important; }
