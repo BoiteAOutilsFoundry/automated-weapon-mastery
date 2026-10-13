@@ -5,6 +5,7 @@
  * Hook registration is centralized in main.js to preserve the original
  * hook execution order and cross-mastery interactions.
  */
+import { gmRequest } from "../gm-socket.js";
 import {
   MODULE_ID,
   WEAPON_BY_ID,
@@ -37,7 +38,7 @@ function slowTrackAttack(workflow) {
   if (targets.length !== 1) return;
   const target = targets[0];
   slowPending.set(`${actor.uuid}|${target}`, {
-    actor, target, workflow, created: Date.now(), combat: game.combat?.id,
+    actor, item, target, workflow, created: Date.now(), combat: game.combat?.id,
     stamp: currentTurnStamp()
   });
   console.info(`${MODULE_ID} | Slow TRACKING`, {attacker: actor.name, target});
@@ -65,6 +66,11 @@ async function slowApply(victim, pending) {
   if (slowBusy.has(key)) return;
   slowBusy.add(key);
   try {
+    if (!victim.isOwner && !game.user.isGM) {
+      await gmRequest("effect", {mastery:"slow", sourceUuid:pending.actor.uuid,
+        itemUuid:pending.item.uuid,targetUuid:pending.target});
+      return;
+    }
     const current = slowEffect(victim);
     // A single effect remains on the victim. Each new Slow hit refreshes it;
     // the expiration is delegated entirely to Times Up.

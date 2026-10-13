@@ -41,7 +41,7 @@ globalThis.document = {createElement: () => ({
 })};
 const combat = {id:"combat1", round:1, turn:0, started:true,combatant:null,combatants:[]};
 globalThis.game = {
-  combat, messages: {get:id=>messages.get(id)},
+  combat, socket:{on:()=>{},emit:()=>{}}, messages: {get:id=>messages.get(id)},
   modules: {get:id=>({active:id === "midi-qol"})},
   user: {id:"user1", isGM:true,targets:new Set()},
   users: [{id:"user1",isGM:true}],time:{worldTime:12345}
@@ -56,7 +56,7 @@ assert.equal(ready.length,1,"one ready handler");
 ready[0]();
 
 const expectedHooks = {
-  renderItemSheet:1, "midi-qol.preAttackRoll":3,
+  renderItemSheet:1, "midi-qol.preAttackRoll":4,
   "midi-qol.AttackRollComplete":5,
   "dnd5e.preRollDamageV2":1,
   "midi-qol.damageRollComplete":2,
@@ -139,11 +139,19 @@ assert.equal(vexEntries(attacker).length,0,"Vex consumed after the attack");
 
 // Sap is refreshed as a single effect and consumed when victim next attacks.
 const mace=weapon("mace","sap");
-fire("midi-qol.AttackRollComplete",workflow(attacker,mace,[t]));
+const sapOne=workflow(attacker,mace,[t]);
+fire("midi-qol.preAttackRoll",sapOne);
+fire("midi-qol.AttackRollComplete",sapOne);
+await settle();
+assert.equal(victim.effects.filter(e=>e.getFlag("automated-weapon-mastery","sap2024")).length,0,"Sap waits for applied damage");
+hpChange(victim,"value",23);
 await settle();
 assert.equal(victim.effects.filter(e=>e.getFlag("automated-weapon-mastery","sap2024")).length,1);
 const firstSap=victim.effects.find(e=>e.getFlag("automated-weapon-mastery","sap2024"));
-fire("midi-qol.AttackRollComplete",workflow(attacker,mace,[t]));
+const sapTwo=workflow(attacker,mace,[t]);
+fire("midi-qol.preAttackRoll",sapTwo);
+fire("midi-qol.AttackRollComplete",sapTwo);
+hpChange(victim,"value",22);
 await settle();
 assert.equal(victim.effects.filter(e=>e.getFlag("automated-weapon-mastery","sap2024")).length,1);
 assert.equal(victim.effects[0],firstSap,"Sap refreshes existing effect");
@@ -154,11 +162,19 @@ fire("midi-qol.AttackRollComplete",enemyAttack);
 await settle();
 assert.equal(victim.effects.filter(e=>e.getFlag("automated-weapon-mastery","sap2024")).length,0);
 
+// A missed attack must never leave a Sap application waiting for unrelated HP loss.
+const missedSap=workflow(attacker,mace,[t],{hits:[],misses:[t]});
+fire("midi-qol.preAttackRoll",missedSap);
+fire("midi-qol.AttackRollComplete",missedSap);
+hpChange(victim,"value",21);
+await settle();
+assert.equal(victim.effects.filter(e=>e.getFlag("automated-weapon-mastery","sap2024")).length,0,"missed Sap must not apply");
+
 // Slow applies once, reduces speed by -10, and refreshes without stacking.
 const club=weapon("club","slow");
 const slowOne=workflow(attacker,club,[t]);
 fire("midi-qol.preAttackRoll",slowOne);
-hpChange(victim,"value",21);
+hpChange(victim,"value",20);
 await settle();
 let slowEffects=victim.effects.filter(e=>e.getFlag("automated-weapon-mastery","slow2024"));
 assert.equal(slowEffects.length,1);

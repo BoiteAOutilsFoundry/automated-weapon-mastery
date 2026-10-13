@@ -5,6 +5,7 @@
  * Hook registration is centralized in main.js to preserve the original
  * hook execution order and cross-mastery interactions.
  */
+import { gmRequest } from "../gm-socket.js";
 import {
   MODULE_ID,
   WEAPON_BY_ID,
@@ -66,7 +67,7 @@ async function toppleTryCard(id) {
   if (!message.getFlag(MODULE_ID, "topple")) {
     await message.update({
       content: toppleInsert(message.content),
-      [`flags.${MODULE_ID}.topple`]: {actorUuid:data.actorUuid,targets:data.targets,dc:data.dc,ability:data.ability,state:"ready"}
+      [`flags.${MODULE_ID}.topple`]: {actorUuid:data.actorUuid,itemUuid:data.itemUuid,targets:data.targets,dc:data.dc,ability:data.ability,state:"ready"}
     });
   }
   topplePending.delete(id);
@@ -126,6 +127,12 @@ async function toppleUse(message) {
       if (!victim?.rollAbilitySave) { results.push(`${target.name} : cible introuvable`); continue; }
       if (toppleImmuneToProne(victim)) {
         results.push(`${target.name} : immunisé à Prone`);
+        continue;
+      }
+      if (!victim.isOwner && !game.user.isGM) {
+        const remote = await gmRequest("topple", {sourceUuid:flag.actorUuid,itemUuid:flag.itemUuid,
+          targetUuid:target.uuid,messageId:message.id});
+        results.push(`${target.name} : ${remote.immune ? "immunisé à Prone" : remote.cancelled ? "jet annulé" : remote.passed ? "résiste" : "à terre"}`);
         continue;
       }
       // Never publish the saving throw to all players. Roll without a chat card,

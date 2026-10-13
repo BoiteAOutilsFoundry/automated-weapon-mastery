@@ -38,3 +38,9 @@ Static checks and regression simulation are included under `tests/`. They do not
 ## Tests
 
 `node tests/regression.mjs` runs the simulation; `python3 tests/static_parity.py <original-v0.0.36.zip>` verifies source parity. Full instructions: `tests/README.md`.
+
+## GM permissions (v12.0.1)
+
+Sap, Slow and Topple can operate on NPC tokens not owned by the player through a native Foundry socket request to the primary active GM. The GM verifies that the requester owns the attacker and that the selected item has the correct mastered weapon property. The same request performs the effect refresh or the hidden Topple save. No SocketLib dependency. An active GM is required.
+
+Sap now waits for actual applied HP or temporary-HP loss, like Slow. Missed Sap attacks are discarded.

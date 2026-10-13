@@ -17,6 +17,7 @@ import {
   hpDecreased,
   hpSnapshot,
 } from "./common.js";
+import { registerGMSocket } from "./gm-socket.js";
 import { registerFeatureUi } from "./ui.js";
 import {
   VEX_FLAG,
@@ -32,7 +33,7 @@ import {
   vexClear,
 } from "./masteries/vex.js";
 import { slowPending, slowTrackAttack, slowOnDamage } from "./masteries/slow.js";
-import { sapBeforeAttack, sapAfterAttack, sapOnHit } from "./masteries/sap.js";
+import { sapBeforeAttack, sapAfterAttack, sapTrackAttack, sapConfirmHit, sapOnDamage, sapDamagePending } from "./masteries/sap.js";
 import { topplePending, toppleStoreAttack, toppleWorkflowDone, toppleTryCard, toppleUse } from "./masteries/topple.js";
 import { pushPending, pushStoreAttack, pushWorkflowDone, pushTryCard, pushUse } from "./masteries/push.js";
 import { grazeMarkMiss, grazeModifyNativeDamage } from "./masteries/graze.js";
@@ -40,6 +41,7 @@ import { grazeMarkMiss, grazeModifyNativeDamage } from "./masteries/graze.js";
 registerFeatureUi();
 
 Hooks.once("ready", () => {
+  registerGMSocket();
   if (!game.modules.get("midi-qol")?.active) {
     ui.notifications.warn("Automated Weapon Mastery nécessite Midi-QOL."); return;
   }
@@ -48,10 +50,11 @@ Hooks.once("ready", () => {
   Hooks.on("midi-qol.preAttackRoll", vexTrackAttack);
   Hooks.on("midi-qol.preAttackRoll", slowTrackAttack);
   Hooks.on("midi-qol.preAttackRoll", sapBeforeAttack);
+  Hooks.on("midi-qol.preAttackRoll", sapTrackAttack);
   Hooks.on("midi-qol.AttackRollComplete", workflow => {
-    // Consume only the Sap effects present when this attack was rolled.
+    // Consume existing Sap and discard misses; new effects wait for committed damage.
+    sapConfirmHit(workflow);
     void sapAfterAttack(workflow).catch(e => console.error(`${MODULE_ID} | Sap consumption`, e));
-    void sapOnHit(workflow).catch(e => console.error(`${MODULE_ID} | Sap application`, e));
   });
   Hooks.on("midi-qol.AttackRollComplete", grazeMarkMiss);
   Hooks.on("dnd5e.preRollDamageV2", grazeModifyNativeDamage);
@@ -88,7 +91,10 @@ Hooks.once("ready", () => {
   Hooks.on("updateActor", (actor, changes, options) => {
     void vexOnHpUpdate(actor, changes, options).catch(e => console.error(`${MODULE_ID} | Vex HP error`, e));
     if (options?.awmPreviousHp && hpDecreased(changes, options.awmPreviousHp))
-      void slowOnDamage(actor).catch(e => console.error(`${MODULE_ID} | Slow HP error`, e));
+      {
+        void slowOnDamage(actor).catch(e => console.error(`${MODULE_ID} | Slow HP error`, e));
+        void sapOnDamage(actor).catch(e => console.error(`${MODULE_ID} | Sap HP error`, e));
+      }
   });
   // Unlinked tokens can receive their HP changes via the token actorData.
   Hooks.on("preUpdateToken", (doc, changes, options) => {
@@ -100,6 +106,7 @@ Hooks.once("ready", () => {
     if (doc.actor && options.awmPreviousHp &&
         hpDecreased(changes, options.awmPreviousHp, "actorData.system.attributes.hp")) {
       void slowOnDamage(doc.actor).catch(e => console.error(`${MODULE_ID} | Slow token error`, e));
+      void sapOnDamage(doc.actor).catch(e => console.error(`${MODULE_ID} | Sap token error`, e));
       void vexApplyHpChange(doc.actor, Number(doc.actor.system.attributes.hp.value))
         .catch(e => console.error(`${MODULE_ID} | Vex token error`, e));
     }
@@ -119,15 +126,16 @@ Hooks.once("ready", () => {
   }));
   Hooks.on("updateCombat", (combat, changed) => {
     void vexNextTurn(combat, changed);
-    for (const [key, p] of slowPending) if (Date.now() - p.created > 120000) slowPending.delete(key);
+    for (const pending of [slowPending, sapDamagePending])
+      for (const [key, p] of pending) if (Date.now() - p.created > 120000) pending.delete(key);
   });
   Hooks.on("deleteCombat", combat => {
-    slowPending.clear();
+    slowPending.clear(); sapDamagePending.clear();
     vexPending.clear(); vexSpent.clear(); vexPreviousTurn.delete(combat.id);
     for (const combatant of combat.combatants) {
       const actor = combatant.actor;
       if (actor?.isOwner && vexEntries(actor).length) void actor.setFlag(MODULE_ID, VEX_FLAG, []);
     }
   });
-  console.log(`${MODULE_ID} | Ready (v0.0.37)`);
+  console.log(`${MODULE_ID} | Ready (v12.0.2)`);
 });
